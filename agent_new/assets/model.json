@@ -1,0 +1,12 @@
+{
+  "hidden_dim": 32,
+  "edge_dim": 16,
+  "graph_layers": 1,
+  "horizon": 5,
+  "num_event_types": 5,
+  "num_concepts": 9,
+  "base_event_rate": 0.01,
+  "evidence_temperature": 1.0,
+  "actual_branch": "none"
+}
+

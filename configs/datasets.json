@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "assebench_safety": {
+      "role": "train",
+      "format": "json",
+      "license": "Apache-2.0",
+      "revision": "fa5f99797073fd9a8d012268bc2b7dc27d05f4b1",
+      "url": "https://raw.githubusercontent.com/Astarojth/AgentAuditor-ASSEBench/fa5f99797073fd9a8d012268bc2b7dc27d05f4b1/ASSEBench/dataset/AgentJudge-safety.json",
+      "relative_path": "assebench/AgentJudge-safety.json",
+      "sha256": "376f078871f18c32f66eb9c94a221db9a2223318cf1b9728c89c85af2563e907",
+      "size_bytes": 4729831,
+      "expected_records": 1476
+    },
+    "assebench_security": {
+      "role": "train",
+      "format": "json",
+      "license": "Apache-2.0",
+      "revision": "fa5f99797073fd9a8d012268bc2b7dc27d05f4b1",
+      "url": "https://raw.githubusercontent.com/Astarojth/AgentAuditor-ASSEBench/fa5f99797073fd9a8d012268bc2b7dc27d05f4b1/ASSEBench/dataset/AgentJudge-security.json",
+      "relative_path": "assebench/AgentJudge-security.json",
+      "sha256": "4db9e5c976d0ed35f11b97afcd697259b4954e776777c150f03b3cab5ba31a57",
+      "size_bytes": 4157976,
+      "expected_records": 817
+    },
+    "linuxarena": {
+      "role": "train",
+      "format": "parquet",
+      "license": "MIT",
+      "revision": "45641faf10b7cc1645036c2cddfb9a77323494e1",
+      "url": "https://huggingface.co/datasets/eval-aware/linuxarena-trajectories/resolve/45641faf10b7cc1645036c2cddfb9a77323494e1/data/train-00000-of-00001.parquet?download=true",
+      "relative_path": "linuxarena/train-00000-of-00001.parquet",
+      "sha256": "4af875ba6b3b8cf7be5e40c42b0f94c724e42f8b367b7c8647d87bcc8d27054d",
+      "size_bytes": 123656922,
+      "expected_records": 775
+    },
+    "atbench": {
+      "role": "frozen_test",
+      "format": "json",
+      "license": "Apache-2.0",
+      "revision": "4476ef92ed8f85c8d58d8a5b9dfdf55aa7893138",
+      "url": "https://huggingface.co/datasets/AI45Research/ATBench/resolve/4476ef92ed8f85c8d58d8a5b9dfdf55aa7893138/ATBench/test.json?download=true",
+      "relative_path": "atbench/test.json",
+      "sha256": null,
+      "expected_records": 1000,
+      "note": "Pinned revision from dataset_training.docx; add SHA-256 after an authorized acquisition before publication."
+    },
+    "openagentsafety": {
+      "role": "ood_test",
+      "format": "git_repository",
+      "license": "MIT",
+      "revision": "2fdd4057c8dae6e776999a55a5766a862e96f174",
+      "url": "https://github.com/Open-Agent-Safety/OpenAgentSafety.git",
+      "relative_path": "openagentsafety/repository",
+      "sha256": null,
+      "expected_records": 1560,
+      "note": "Evaluation-only legacy repository; never include in initial training."
+    }
+  },
+  "forbidden_training_files": [
+    "AgentJudge-strict.json",
+    "AgentJudge-loose.json",
+    "agentharm.json",
+    "rjudge.json"
+  ],
+  "training_mix": {
+    "assebench": 0.70,
+    "linuxarena": 0.30
+  },
+  "internal_split": {
+    "train": 0.80,
+    "validation": 0.10,
+    "calibration": 0.10,
+    "group_level_only": true
+  }
+}

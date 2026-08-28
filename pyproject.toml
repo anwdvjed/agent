@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-new"
+version = "0.1.0"
+description = "Intervention-conditioned provenance-aware competing-risk safety model for tool agents"
+requires-python = ">=3.9"
+dependencies = [
+  "numpy>=1.24,<3",
+  "torch>=2.2,<3",
+  "requests>=2.31,<3",
+  "urllib3>=1.26,<2",
+  "tqdm>=4.66,<5",
+  "pyarrow>=15,<24",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_new*"]
+
+[tool.setuptools.package-data]
+agent_new = ["assets/*.json"]
+
+[project.scripts]
+agent-new-predict = "agent_new.cli:main"

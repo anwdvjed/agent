@@ -1,0 +1,54 @@
+{
+  "version": "2026-08-23",
+  "tools": [
+    {
+      "name": "read_document",
+      "operation": "read",
+      "required_scopes": ["data:read"],
+      "approval_required": false,
+      "side_effects": [],
+      "argument_roles": {"path": "data"},
+      "aliases": ["documents.read"]
+    },
+    {
+      "name": "save_draft",
+      "operation": "write_internal",
+      "required_scopes": ["data:write"],
+      "approval_required": false,
+      "side_effects": ["internal_write"],
+      "argument_roles": {"path": "destination", "content": "data"},
+      "aliases": ["drafts.save"]
+    },
+    {
+      "name": "send_email",
+      "operation": "write_external",
+      "required_scopes": ["data:read", "external:send"],
+      "approval_required": true,
+      "side_effects": ["network", "external_transfer"],
+      "argument_roles": {
+        "recipient": "destination",
+        "attachment": "data",
+        "body": "data"
+      },
+      "aliases": ["email.send"]
+    },
+    {
+      "name": "run_shell",
+      "operation": "execute",
+      "required_scopes": ["code:execute"],
+      "approval_required": true,
+      "side_effects": ["code_execution", "system_change"],
+      "argument_roles": {"command": "command"},
+      "aliases": ["terminal.exec"]
+    },
+    {
+      "name": "delete_file",
+      "operation": "delete",
+      "required_scopes": ["data:delete"],
+      "approval_required": true,
+      "side_effects": ["data_deletion", "irreversible"],
+      "argument_roles": {"path": "data"},
+      "aliases": ["files.delete"]
+    }
+  ]
+}

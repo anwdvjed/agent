@@ -1,0 +1,29 @@
+{
+  "seed": 20260824,
+  "epochs": 40,
+  "batch_size": 16,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "gradient_clip": 1.0,
+  "patience": 7,
+  "num_workers": 0,
+  "source_batch_share": {
+    "assebench": 0.70,
+    "linuxarena": 0.30
+  },
+  "loss": {
+    "survival": 1.0,
+    "intervention_survival": 0.0,
+    "concepts": 0.25,
+    "evidence_supervision": 0.0,
+    "evidence_sufficiency": 0.10,
+    "evidence_necessity": 0.10,
+    "evidence_sparsity": 0.01,
+    "intervention_ranking": 0.0,
+    "attack_intent": 0.25,
+    "utility": 0.25,
+    "necessity_margin": 0.05,
+    "intervention_margin": 0.05
+  }
+}
+

@@ -1,0 +1,18 @@
+{
+  "version": "smoke-v1",
+  "tools": [
+    {
+      "name": "send_email",
+      "operation": "write_external",
+      "required_scopes": ["data:read", "external:send"],
+      "approval_required": true,
+      "side_effects": ["network", "external_transfer"],
+      "argument_roles": {
+        "recipient": "destination",
+        "attachment": "data"
+      },
+      "aliases": []
+    }
+  ]
+}
+

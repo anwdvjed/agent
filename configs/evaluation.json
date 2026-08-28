@@ -1,0 +1,11 @@
+{
+  "batch_size": 32,
+  "epochs": 1,
+  "device": "auto",
+  "alpha": 0.05,
+  "ensemble_z": 1.96,
+  "target_safe_trajectory_fpr": 0.05,
+  "bootstrap_samples": 500,
+  "bootstrap_seed": 20260824
+}
+
