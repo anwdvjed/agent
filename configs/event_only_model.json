@@ -1,0 +1,7 @@
+{
+  "hidden_dim": 128,
+  "edge_dim": 32,
+  "graph_layers": 2,
+  "horizon": 5,
+  "formation_enabled": false
+}

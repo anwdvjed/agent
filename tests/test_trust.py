@@ -2,7 +2,7 @@ import copy
 import time
 import unittest
 
-from agent_new.trust import HMACRequestVerifier, sign_request
+from agent1.trust import HMACRequestVerifier, sign_request
 
 
 class TrustedContextTests(unittest.TestCase):
@@ -24,6 +24,12 @@ class TrustedContextTests(unittest.TestCase):
         tampered["candidate"]["action"] = "delete"
         fresh_verifier = HMACRequestVerifier(secret, ["runtime-policy-engine"])
         self.assertFalse(fresh_verifier(tampered))
+        subject_verifier = HMACRequestVerifier(
+            secret,
+            ["runtime-policy-engine"],
+            allowed_subjects=["different-agent"],
+        )
+        self.assertFalse(subject_verifier(signed))
 
     def test_expired_or_wrong_issuer_attestation_fails(self):
         secret = b"unit-test-secret"
@@ -42,4 +48,3 @@ class TrustedContextTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

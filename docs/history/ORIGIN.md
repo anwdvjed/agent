@@ -1,0 +1,1 @@
+Agent1 derives core registry, graph, feature, neural model, loss, checkpoint and trust code from the local agent-new working tree. Original project is unchanged. The dataset, policy calibration, runtime, replay, training and evaluation interfaces are new and checkpoints are not interchangeable.

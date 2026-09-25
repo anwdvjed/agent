@@ -1,0 +1,147 @@
+{
+  "project": "agent-astra",
+  "version": "0.4.0",
+  "date": "2026-09-24",
+  "implementation_digest": "7b7e1cfcb949552b4b0674c419f53c5adfd7e36b5b5efb7b551527e5482dab19",
+  "tests": {
+    "command": "../agent1/.venv/bin/python -m pytest -q --tb=short",
+    "passed": 100,
+    "failed": 0,
+    "skipped": 0
+  },
+  "pipelines": {
+    "standard": {
+      "command": "../agent1/.venv/bin/python scripts/run_pipeline.py --groups 16 --output artifacts/release/standard",
+      "exit_code": 0,
+      "synthetic": true,
+      "training": {
+        "101": {
+          "epochs_completed": 2,
+          "best_epoch": 2,
+          "trained_heads": {
+            "event_occurrence": true,
+            "event_cause": false,
+            "utility": true,
+            "attack_intent": true,
+            "concepts": false,
+            "edge_evidence": false,
+            "formation_current_conditions": false,
+            "formation_future_conditions": false,
+            "formation_formed_before": false,
+            "formation_hazard": false,
+            "formation_current_ready": false,
+            "formation_future_ready": false
+          }
+        },
+        "202": {
+          "epochs_completed": 2,
+          "best_epoch": 2,
+          "trained_heads": {
+            "event_occurrence": true,
+            "event_cause": false,
+            "utility": true,
+            "attack_intent": true,
+            "concepts": false,
+            "edge_evidence": false,
+            "formation_current_conditions": false,
+            "formation_future_conditions": false,
+            "formation_formed_before": false,
+            "formation_hazard": false,
+            "formation_current_ready": false,
+            "formation_future_ready": false
+          }
+        }
+      },
+      "calibration_status": "no_feasible_policy",
+      "calibration_groups_per_policy": [
+        5,
+        5
+      ],
+      "test_executed_actions": 0,
+      "calibration_digest": "c27d21f7d352388b8f3ea1c0dbc53a608a7b36e36e9e7d72ddfbb90174e183c3"
+    },
+    "formation": {
+      "command": "../agent1/.venv/bin/python scripts/run_pipeline.py --formation --groups 16 --output artifacts/release/formation",
+      "exit_code": 0,
+      "synthetic": true,
+      "training": {
+        "101": {
+          "epochs_completed": 2,
+          "best_epoch": 2,
+          "trained_heads": {
+            "event_occurrence": true,
+            "event_cause": false,
+            "utility": true,
+            "attack_intent": true,
+            "concepts": false,
+            "edge_evidence": false,
+            "formation_current_conditions": true,
+            "formation_future_conditions": true,
+            "formation_formed_before": true,
+            "formation_hazard": true,
+            "formation_current_ready": true,
+            "formation_future_ready": true
+          }
+        },
+        "202": {
+          "epochs_completed": 2,
+          "best_epoch": 2,
+          "trained_heads": {
+            "event_occurrence": true,
+            "event_cause": false,
+            "utility": true,
+            "attack_intent": true,
+            "concepts": false,
+            "edge_evidence": false,
+            "formation_current_conditions": true,
+            "formation_future_conditions": true,
+            "formation_formed_before": true,
+            "formation_hazard": true,
+            "formation_current_ready": true,
+            "formation_future_ready": true
+          }
+        }
+      },
+      "calibration_status": "no_feasible_policy",
+      "calibration_groups_per_policy": [
+        5,
+        5
+      ],
+      "test_executed_actions": 0,
+      "calibration_digest": "4bfa0b5a2e2ed4c2e3702921e17bbce58d9e5d468184b91b07734705e51a5c72"
+    }
+  },
+  "production_admission": "HOLD",
+  "real_data_retraining": false,
+  "real_closed_loop_certification": false,
+  "wheel": {
+    "path": "dist/agent_astra-0.4.0-py3-none-any.whl",
+    "sha256": "88a541c95ac3561242b6f5fa7f2efc8ecc930cf1e85cfaeb54964f6e91c2ca97",
+    "build": "passed",
+    "isolated_install_directory": "/tmp/agent-astra-install-20260924",
+    "isolated_checkpoint_load_and_forecast": "passed"
+  },
+  "prediction_and_explanation_cli": {
+    "exit_code": 0,
+    "path": "artifacts/release/formation",
+    "node_weight_display_count": 32,
+    "verified_replay": null
+  },
+  "ablation": {
+    "command": "../agent1/.venv/bin/python scripts/benchmark_ablation.py --synthetic --epochs 1 --output artifacts/release/ablation",
+    "variants": [
+      "gru",
+      "loop1",
+      "loop2",
+      "loop4",
+      "no_time",
+      "temporal_only",
+      "graph_only"
+    ],
+    "synthetic": true,
+    "seeds": [
+      101
+    ],
+    "scope": "single-seed engineering comparison; not evidence of accuracy improvement"
+  }
+}

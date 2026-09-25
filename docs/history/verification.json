@@ -1,0 +1,72 @@
+{
+  "version": "0.2.0",
+  "status": "engineering_pipeline_passed",
+  "tests": {
+    "passed": 57,
+    "failed": 0
+  },
+  "wheel_install_and_prediction": "passed",
+  "synthetic": true,
+  "checkpoint_format": "agent1-checkpoint-v2",
+  "calibration_status": "no_feasible_policy",
+  "outputs": {
+    "validation.json": {
+      "path": "artifacts/formation_upgrade/verified_run/validation.json",
+      "sha256": "929e9596e894c900b0b7fff1cdf7c6376f3c105eda8727f4c1e9145cd49b1226"
+    },
+    "test.json": {
+      "path": "artifacts/formation_upgrade/verified_run/test.json",
+      "sha256": "53e67c15602ef4aa3d5104e1d839b1ffd6a83e39a120445c244167299d49bb5b"
+    },
+    "calibration.json": {
+      "path": "artifacts/formation_upgrade/verified_run/calibration.json",
+      "sha256": "12e708d56a759a0c3263f146ed4699949efcee69f238b867171366da05898501"
+    },
+    "replay_test.json": {
+      "path": "artifacts/formation_upgrade/verified_run/replay_test.json",
+      "sha256": "e4031f49beeaabb3d5eaf0e823fef4266eb8cfd9e047d3e5058cbc5555fde78c"
+    },
+    "prediction.json": {
+      "path": "artifacts/formation_upgrade/verified_run/prediction.json",
+      "sha256": "d7e0ec2b8ec216c435e4a3446614abed4f194d8e9503cbb2614b6fef598bdd17"
+    }
+  },
+  "training": [
+    {
+      "seed": 101,
+      "epochs": 2,
+      "trained_prediction_heads": {
+        "conditions": true,
+        "formation": true,
+        "increment": true
+      },
+      "supervision_counts": {
+        "conditions": 105,
+        "formation": 105,
+        "increment": 16
+      },
+      "train_losses": [
+        3.0496020906426935,
+        2.444726527406928
+      ]
+    },
+    {
+      "seed": 202,
+      "epochs": 2,
+      "trained_prediction_heads": {
+        "conditions": true,
+        "formation": true,
+        "increment": true
+      },
+      "supervision_counts": {
+        "conditions": 105,
+        "formation": 105,
+        "increment": 16
+      },
+      "train_losses": [
+        2.953050128529581,
+        2.6992947653438266
+      ]
+    }
+  ]
+}

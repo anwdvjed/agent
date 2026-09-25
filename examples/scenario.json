@@ -1,0 +1,8 @@
+{
+  "episode_id": "example-episode",
+  "group_id": "example-group",
+  "split": "test",
+  "attack": true,
+  "delay": 0,
+  "synthetic": true
+}

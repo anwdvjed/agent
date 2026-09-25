@@ -1,0 +1,23 @@
+{
+  "epochs": 30,
+  "batch_size": 16,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "patience": 5,
+  "gradient_clip": 1.0,
+  "threads": 1,
+  "utility_weight": 0.25,
+  "intent_weight": 0.25,
+  "sparsity_weight": 0.001,
+  "condition_weight": 0.25,
+  "formation_weight": 0.5,
+  "increment_weight": 0.1,
+  "ordering_weight": 0.1,
+  "full_weight": 1.0,
+  "sufficiency_weight": 0.0,
+  "necessity_weight": 0.0,
+  "ready_now_weight": 0.25,
+  "ready_future_weight": 0.25,
+  "concept_weight": 0.25,
+  "edge_weight": 0.25
+}

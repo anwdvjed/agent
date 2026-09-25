@@ -1,0 +1,698 @@
+{
+  "scope": "engineering ablation; no production certification; p95 is nearest-rank over 12 warm samples",
+  "results": [
+    {
+      "variant": "gru",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "full",
+        "formation_enabled": true,
+        "encoder": "gru",
+        "attention_heads": 4,
+        "refinement_steps": 2,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 23260,
+      "training_seconds": 1.995905749998201,
+      "warm_forward_median_ms": 0.44591700134333223,
+      "warm_forward_p95_ms": 0.6109999994805548,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 0.9166666666666666,
+          "brier": 0.0754511830478247,
+          "ece": 0.06667378358542919
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.7333333333333333,
+          "brier": 0.21766335975615905,
+          "ece": 0.20037215804824463
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.6,
+          "brier": 0.3485467715719969,
+          "ece": 0.3344560070679738
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.3333333333333333,
+          "brier": 0.2627051488396568,
+          "ece": 0.4376270862726065
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.5238888888888888,
+          "brier": 0.2768053087641644,
+          "ece": 0.24660225693996135
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.3905325443786982,
+          "brier": 0.30529825416664924,
+          "ece": 0.43041579196086294
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.40998375995669323,
+          "brier": 0.26713457587182476,
+          "ece": 0.24729813990684657
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 0.6666666666666666,
+          "brier": 0.26280164387908084,
+          "ece": 0.43790239095687866
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.6071428571428571,
+          "brier": 0.5231320936506928,
+          "ece": 0.524063766002655
+        },
+        "exact_future_formation_time_mae": 1.4879504919052124,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.38846153846153847,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.056962025316455694,
+        "condition_change_recall": 0.47368421052631576,
+        "condition_change_f1": 0.1016949152542373
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "loop1",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "full",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 1,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 1.7794099580023612,
+      "warm_forward_median_ms": 1.1016249991371296,
+      "warm_forward_p95_ms": 1.1819579995062668,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.0754524240247634,
+          "ece": 0.0666854830745321
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.4666666666666667,
+          "brier": 0.2176759389328747,
+          "ece": 0.20040274110551065
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.725,
+          "brier": 0.3485783748791193,
+          "ece": 0.334504583134101
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.08333333333333333,
+          "brier": 0.2592958072446212,
+          "ece": 0.42833689084419835
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.595,
+          "brier": 0.25774008872006304,
+          "ece": 0.2231253490998195
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.5680473372781065,
+          "brier": 0.24850103160774448,
+          "ece": 0.18177862809254575
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.3396875725001933,
+          "brier": 0.24082048937673936,
+          "ece": 0.2078333107324747
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.2665767031061885,
+          "ece": 0.4466237907226269
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.4166666666666667,
+          "brier": 0.5254664186860704,
+          "ece": 0.5262292119172903
+        },
+        "exact_future_formation_time_mae": 1.4743908166885376,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.5461538461538461,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.05405405405405406,
+        "condition_change_recall": 0.3157894736842105,
+        "condition_change_f1": 0.09230769230769231
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "loop2",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "full",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 2,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 1.887119957998948,
+      "warm_forward_median_ms": 1.510458499978995,
+      "warm_forward_p95_ms": 1.6128750030475203,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.07545217416858999,
+          "ece": 0.06668367652365795
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.5666666666666667,
+          "brier": 0.21767374330689515,
+          "ece": 0.2003980985341164
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.65,
+          "brier": 0.34857450548261315,
+          "ece": 0.3344973921775818
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.08333333333333333,
+          "brier": 0.2476671467210082,
+          "ece": 0.41711104145416844
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.5494444444444444,
+          "brier": 0.2552685800699003,
+          "ece": 0.2112480030610011
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.5857988165680473,
+          "brier": 0.23587024285938918,
+          "ece": 0.3146055438197576
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.32468486582630884,
+          "brier": 0.24588561142573984,
+          "ece": 0.19953915098538766
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 0.8333333333333334,
+          "brier": 0.2440523759855844,
+          "ece": 0.42016052970519435
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.4880952380952381,
+          "brier": 0.5233837201020748,
+          "ece": 0.524211415877709
+        },
+        "exact_future_formation_time_mae": 1.4940337181091308,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.5346153846153846,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.05263157894736842,
+        "condition_change_recall": 0.3157894736842105,
+        "condition_change_f1": 0.09022556390977443
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "loop4",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "full",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 4,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 2.1229419999981474,
+      "warm_forward_median_ms": 2.40227100039192,
+      "warm_forward_p95_ms": 2.4896659997466486,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 0.8333333333333334,
+          "brier": 0.07545228255869735,
+          "ece": 0.06668226678784077
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.13333333333333333,
+          "brier": 0.21767240916966174,
+          "ece": 0.2003919929265976
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.3,
+          "brier": 0.348568777576318,
+          "ece": 0.3344860968108361
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.75,
+          "brier": 0.22313235855977792,
+          "ece": 0.3918365010848412
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.48833333333333334,
+          "brier": 0.25168468501659463,
+          "ece": 0.1929707265817202
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.5946745562130178,
+          "brier": 0.2359722868352258,
+          "ece": 0.3081851676106453
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.3265408707756554,
+          "brier": 0.25442744906352116,
+          "ece": 0.1982160054720365
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.20851885991018998,
+          "ece": 0.3772916885522696
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.44047619047619047,
+          "brier": 0.5201532090751381,
+          "ece": 0.5210662759267367
+        },
+        "exact_future_formation_time_mae": 1.4889686346054076,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.47307692307692306,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.05970149253731343,
+        "condition_change_recall": 0.42105263157894735,
+        "condition_change_f1": 0.10457516339869281
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "no_time",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "full",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 2,
+        "history_window": 32,
+        "node_time_weighting": false,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 1.8887469580004108,
+      "warm_forward_median_ms": 1.3965204998385161,
+      "warm_forward_p95_ms": 1.4913329978298862,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 0.9166666666666666,
+          "brier": 0.07545231292451203,
+          "ece": 0.06668398142434083
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.5666666666666667,
+          "brier": 0.2176746011730355,
+          "ece": 0.2003995059774472
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.475,
+          "brier": 0.34857625475852994,
+          "ece": 0.33449938664069545
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.25,
+          "brier": 0.26197482849460907,
+          "ece": 0.4341766834259033
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.5516666666666666,
+          "brier": 0.2550132982013998,
+          "ece": 0.2114743819603553
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.5857988165680473,
+          "brier": 0.24234493379829153,
+          "ece": 0.2570986919678175
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.3234475291934112,
+          "brier": 0.24526819233270017,
+          "ece": 0.20213835491583898
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 0.8333333333333334,
+          "brier": 0.2466765181032158,
+          "ece": 0.4226755453990056
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.4166666666666667,
+          "brier": 0.5230123412890451,
+          "ece": 0.5238602849153372
+        },
+        "exact_future_formation_time_mae": 1.4924842596054078,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.5230769230769231,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.058823529411764705,
+        "condition_change_recall": 0.3684210526315789,
+        "condition_change_f1": 0.10144927536231885
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "temporal_only",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "temporal_only",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 2,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 1.7208838340011425,
+      "warm_forward_median_ms": 0.9583539995219326,
+      "warm_forward_p95_ms": 1.0874159997911192,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.07545130718617934,
+          "ece": 0.06668649047899705
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.7333333333333333,
+          "brier": 0.21767384914657376,
+          "ece": 0.20040340563998774
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.475,
+          "brier": 0.3485878811729649,
+          "ece": 0.33451685223441857
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.08333333333333333,
+          "brier": 0.3460227646286623,
+          "ece": 0.5144928326973548
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.5872222222222222,
+          "brier": 0.2731988185695109,
+          "ece": 0.2534792845065777
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.4349112426035503,
+          "brier": 0.2559923755179967,
+          "ece": 0.1639397625739758
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.4550692135179027,
+          "brier": 0.24104091172922903,
+          "ece": 0.2052082291016212
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.26747694400548944,
+          "ece": 0.4497463794854971
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.4880952380952381,
+          "brier": 0.521381885361749,
+          "ece": 0.5223688116440406
+        },
+        "exact_future_formation_time_mae": 1.5678078413009644,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.5884615384615385,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.05102040816326531,
+        "condition_change_recall": 0.2631578947368421,
+        "condition_change_f1": 0.08547008547008547
+      },
+      "groups": 2,
+      "seed": 101
+    },
+    {
+      "variant": "graph_only",
+      "synthetic": true,
+      "model_config": {
+        "event_dim": 98,
+        "node_dim": 73,
+        "edge_state_dim": 10,
+        "security_progress_dim": 5,
+        "hidden_dim": 24,
+        "edge_dim": 8,
+        "graph_layers": 1,
+        "horizon": 5,
+        "num_event_types": 5,
+        "num_concepts": 9,
+        "base_event_rate": 0.01,
+        "evidence_temperature": 1.0,
+        "actual_branch": "none",
+        "ablation": "graph_only",
+        "formation_enabled": true,
+        "encoder": "loop_transformer",
+        "attention_heads": 4,
+        "refinement_steps": 2,
+        "history_window": 32,
+        "node_time_weighting": true,
+        "max_active_nodes": 2048,
+        "max_persistent_nodes": 512
+      },
+      "parameters": 29759,
+      "training_seconds": 1.7588167920002888,
+      "warm_forward_median_ms": 1.1520420011947863,
+      "warm_forward_p95_ms": 1.253750000614673,
+      "risk_by_bin": {
+        "1": {
+          "n": 13,
+          "auroc": 0.08333333333333333,
+          "brier": 0.07545289215524534,
+          "ece": 0.06668429871877798
+        },
+        "3": {
+          "n": 13,
+          "auroc": 0.23333333333333334,
+          "brier": 0.21767799365605456,
+          "ece": 0.2004062503289718
+        },
+        "5": {
+          "n": 13,
+          "auroc": 0.4875,
+          "brier": 0.34858080396037877,
+          "ece": 0.33450593082950664
+        }
+      },
+      "joint_readiness": {
+        "joint_ready_now": {
+          "n": 13,
+          "auroc": 0.25,
+          "brier": 0.22258939386647666,
+          "ece": 0.3874686337434329
+        },
+        "joint_ready_future": {
+          "n": 65,
+          "auroc": 0.5494444444444444,
+          "brier": 0.24769023800704904,
+          "ece": 0.19269322752952575
+        },
+        "current_conditions": {
+          "n": 52,
+          "auroc": 0.4156804733727811,
+          "brier": 0.25978463981334393,
+          "ece": 0.32516559901145786
+        },
+        "future_conditions": {
+          "n": 260,
+          "auroc": 0.31571417523780065,
+          "brier": 0.2488711904744963,
+          "ece": 0.22298471664006894
+        },
+        "formed_before": {
+          "n": 13,
+          "auroc": 1.0,
+          "brier": 0.2836167683637214,
+          "ece": 0.4678231661136334
+        },
+        "formation_within_horizon": {
+          "n": 13,
+          "auroc": 0.5119047619047619,
+          "brier": 0.5252736588883844,
+          "ece": 0.5261225792077872
+        },
+        "exact_future_formation_time_mae": 1.436673903465271,
+        "exact_future_formation_time_count": 5,
+        "condition_change_accuracy": 0.38846153846153847,
+        "condition_change_positive_count": 19,
+        "condition_change_precision": 0.05128205128205128,
+        "condition_change_recall": 0.42105263157894735,
+        "condition_change_f1": 0.09142857142857143
+      },
+      "groups": 2,
+      "seed": 101
+    }
+  ]
+}

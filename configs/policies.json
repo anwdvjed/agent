@@ -1,0 +1,22 @@
+{
+  "purpose": "research_example_only_not_certified",
+  "risk_budget": 0.05,
+  "interruption_budget": 0.25,
+  "delta": 0.05,
+  "policies": [
+    {
+      "format": "agent1-temporal-policy-v2", "horizon_bins": 5, "near_bins": 1,
+      "score_method": "cdf_member_mean_std_running_max_v1", "disagreement_penalty": 1.0,
+      "stop_horizon_threshold": 0.1, "stop_near_threshold": 0.02,
+      "warn_horizon_threshold": 0.05, "min_utility": 0.0, "cost_weight": 0.05,
+      "utility_mode": "learned", "readiness_warning": {"mode": "off", "lookahead_bins": 0, "threshold": null}
+    },
+    {
+      "format": "agent1-temporal-policy-v2", "horizon_bins": 5, "near_bins": 1,
+      "score_method": "cdf_member_mean_std_running_max_v1", "disagreement_penalty": 1.0,
+      "stop_horizon_threshold": 0.2, "stop_near_threshold": 0.05,
+      "warn_horizon_threshold": 0.1, "min_utility": 0.0, "cost_weight": 0.05,
+      "utility_mode": "learned", "readiness_warning": {"mode": "off", "lookahead_bins": 0, "threshold": null}
+    }
+  ]
+}

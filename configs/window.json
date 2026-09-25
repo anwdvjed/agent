@@ -1,0 +1,10 @@
+{
+  "pre_trigger_steps": 8,
+  "detail_steps": 32,
+  "activate_score": 0.2,
+  "clear_score": 0.1,
+  "recovery_commits": 3,
+  "max_pinned_facts": 128,
+  "max_committed_events": 4096,
+  "archive_limit": 8
+}

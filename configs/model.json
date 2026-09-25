@@ -7,6 +7,13 @@
   "num_concepts": 9,
   "base_event_rate": 0.01,
   "evidence_temperature": 1.0,
-  "actual_branch": "none"
+  "actual_branch": "none",
+  "formation_enabled": true,
+  "encoder": "loop_transformer",
+  "attention_heads": 4,
+  "refinement_steps": 2,
+  "history_window": 32,
+  "node_time_weighting": true,
+  "max_active_nodes": 2048,
+  "max_persistent_nodes": 512
 }
-

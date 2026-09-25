@@ -1,0 +1,13 @@
+{
+  "hidden_dim": 24,
+  "edge_dim": 8,
+  "graph_layers": 1,
+  "horizon": 5,
+  "encoder": "loop_transformer",
+  "attention_heads": 4,
+  "refinement_steps": 2,
+  "history_window": 32,
+  "node_time_weighting": true,
+  "max_active_nodes": 2048,
+  "max_persistent_nodes": 512
+}

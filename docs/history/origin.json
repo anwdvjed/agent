@@ -1,0 +1,27 @@
+{
+  "source_project": "/Users/viper3/Documents/Federated Learning/agent-new",
+  "source_git_head": "6e2a2febfe225d2f76b1558c30c8954cd44189c1",
+  "source_state": "local working tree, including existing uncommitted modifications",
+  "core_source_sha256": {
+    "metrics.py": "ba1cfce30b3df311db0ba82c2d354393837bb5a704d88057a1f463fc576aae81",
+    "checkpoint.py": "f7dad83e3ee305d28d16c9dd42408d650adc4091d918f8c176c98359806bf22e",
+    "registry.py": "cd0854d57c7ce11c84eaadb8e4001fe946715ccdda0b2c1b0203aacb62760063",
+    "evaluation.py": "cdaacb3460bb87f37266ff99fb9b201096437d1c054e01aaaf78a7ce033a9635",
+    "graph.py": "624f9682f284b3b947a7a10bacd42595f4d4b3c4cf379f050d8fcf14b6914709",
+    "constants.py": "90193928ae7196d975f02ef37974c1df3a5bb55abc7b18456e7ca20bfb7f942f",
+    "policy.py": "ff470573bc1afdea6fcbb535672308b26be816eabe6356039f0a0171f67341f5",
+    "__init__.py": "b8f6d3bbed7e87c46d9b97483c9c0bebd888bb3bc6401c2653cb695a4c6180c4",
+    "features.py": "20131b7f2803fd7176ce6723c1170b2635d548786e76fb6845c53cc10ee9aa29",
+    "runtime.py": "9c8963fe1ca05c7d09c3e2de7017ea729f0146252ce61b5b69defcc9880138f6",
+    "model.py": "e76022c689181a46eefe88424403e3eaf87fac5585dc0a13969de0b6f1667f5d",
+    "cli.py": "e3994e43d87405680a06c3ba8db673e08da6d3946f36e2bfb5999a8e59f10a3e",
+    "trust.py": "cc9540f79a06afe238fe67d926e1cb1627ffc7e35612c8f0355f66564472b2d9",
+    "ensemble_evaluation.py": "8137cf1c0b815d24392f3cbd9160225205c299d9c831f4b5d57e80b86b56d760",
+    "losses.py": "2c008097c9968db96a4167c6ce52f3baae0697c55df02864a3da9cc556ab30a1",
+    "training.py": "32092b8d659fb40b347fb5fedcf145545d2c159a65109bdad5eb69c1a7f3c55e",
+    "data.py": "32561c786762f319e2e5a16dab5d501bc05def4bac851c9a1714a72ba7336c0c",
+    "calibration.py": "33cf555f3106c657e85e8880a16599bb6f45ccca4b6b25feca6249cbfd587a4e",
+    "smoke.py": "015051304a81725fc6c7d1a926eb6acb59e4b2bb6b9e73a3163f8fe224a08c12"
+  },
+  "original_project_modified_by_this_task": false
+}

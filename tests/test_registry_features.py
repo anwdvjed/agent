@@ -3,8 +3,8 @@ import unittest
 
 import numpy as np
 
-from agent_new.features import stable_unicode_hash
-from agent_new.registry import ToolRegistry, UnknownToolError
+from agent1.features import stable_unicode_hash
+from agent1.registry import ToolRegistry, UnknownToolError
 
 
 ROOT = Path(__file__).resolve().parents[1]
