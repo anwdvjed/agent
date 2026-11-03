@@ -1,0 +1,4 @@
+data/
+*.jsonl
+*.pcap
+.pytest_cache/

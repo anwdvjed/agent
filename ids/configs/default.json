@@ -1,0 +1,6 @@
+{
+  "flow_timeout": 60.0,
+  "rules": "rules/default.yaml",
+  "anomaly": { "threshold": 4.0 },
+  "alerts": { "min_severity": "low", "jsonl": null }
+}

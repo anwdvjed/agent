@@ -1,0 +1,16 @@
+# Signature rules. Every non-null field must match for a rule to fire.
+rules:
+  - id: SCAN-001
+    description: Possible SYN scan (high SYN ratio, no completed handshake)
+    severity: high
+    proto: tcp
+    min_syn_ratio: 0.9
+  - id: TELNET-001
+    description: Telnet connection attempt (cleartext remote shell)
+    severity: medium
+    proto: tcp
+    dst_port: 23
+  - id: FLOOD-001
+    description: Packet rate flood against a single destination
+    severity: high
+    min_pkts_per_sec: 5000
