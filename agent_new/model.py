@@ -11,6 +11,29 @@ Evidence is part of the computation rather than a post-hoc explanation.  A
 differentiable edge mask produces selected and complementary subgraphs; the
 selected subgraph is the primary risk path, while full-graph and complement
 predictions support sufficiency and necessity objectives.
+
+Reading guide (which function does what)
+----------------------------------------
+
+The forward pass for one intervention branch is, in order:
+
+1. ``StepTimeSafetyEncoder``           prefix -> temporal state  ``h  [B, D]``
+2. ``DeterministicRelationGraphEncoder.prepare``
+                                        node/edge features -> initial embeddings
+3. ``EvidenceMasker``                   score every provenance edge  ``[E]``
+4. ``DeterministicRelationGraphEncoder.propagate`` x3
+                                        full / selected / complement subgraphs
+5. ``TemporalGraphFusion``              (h, pooled graph, candidate node) -> fused
+6. ``MonotoneFactorizedCompetingRiskHead``
+                                        fused -> any-event logits ``[B, H]`` and
+                                        cause logits ``[B, H, K]``
+7. ``factorized_competing_risk_distribution``
+                                        logits -> survival, incidence, ``risk``
+
+``AgentNewModel._forward_branch`` wires steps 1-7 for one branch and
+``AgentNewModel.forward`` repeats it for every branch, then forms the paired
+``risk_deltas = risk[none] - risk[intervention]``.  The training objective
+that matches step 7 is ``losses.factorized_competing_risk_losses``.
 """
 
 from __future__ import annotations
@@ -423,15 +446,35 @@ class MonotoneFactorizedCompetingRiskHead(nn.Module):
     def forward(
         self, fused_state: torch.Tensor, concept_probabilities: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return ``(event_logits [B, H], cause_logits [B, H, K])``.
+
+        ``event_logits[:, t]`` is the logit of ``q_t = P(first event in bin t
+        | no event before t)``.  ``cause_logits[:, t, k]`` is the unnormalised
+        log-probability of cause ``k`` given an event in bin ``t``.  The two
+        are produced by separate networks so that cause mass can never leak
+        into, or out of, the total event probability.
+        """
+
+        # (a) Any-event logit from the fused state plus the *non-critical*
+        #     concepts only.  Critical concepts enter below through a
+        #     constrained path so their effect is sign-controlled.
         noncritical = concept_probabilities.index_select(1, self.noncritical_indices)
         event_logits = self.event_output(
             self.event_hidden(torch.cat([fused_state, noncritical], dim=-1))
         )
+        # (b) Monotone contribution of the critical concepts
+        #     (privilege_excess, sensitive_data_flow, anomalous_destination,
+        #     missing_approval, irreversibility, unknown_capability).
+        #     softplus(.) >= 0, so a higher critical-concept probability can
+        #     only raise the any-event logit in every horizon bin.
         critical = concept_probabilities.index_select(1, self.critical_indices)
         nonnegative_weights = F.softplus(self.monotone_weights_raw)
         event_logits = event_logits + torch.einsum(
             "bc,hc->bh", critical, nonnegative_weights
         )
+        # (c) Cause logits: which event type is most likely *given* an event
+        #     occurs.  These are normalised later by softmax over K and do not
+        #     change ``risk``.
         cause_logits = self.cause_network(
             torch.cat([fused_state, concept_probabilities], dim=-1)
         ).reshape(fused_state.shape[0], self.horizon, self.num_event_types)
@@ -453,8 +496,13 @@ def factorized_competing_risk_distribution(
         raise ValueError("event_logits must have shape [B, H]")
     if cause_logits.ndim != 3 or cause_logits.shape[:2] != event_logits.shape:
         raise ValueError("cause_logits must have shape [B, H, K]")
+    # Discrete-time competing-risk algebra, all in log space.
+    #   log(1 - q_t)  via logsigmoid(-a_t)
+    #   log q_t       via logsigmoid(a_t)
     log_no_event = F.logsigmoid(-event_logits)
     log_event = F.logsigmoid(event_logits)
+    # log S_{t-1}: probability of surviving every bin *before* t.
+    # Bin 1 has nothing before it, hence the leading zero column.
     log_survival_before = torch.cat(
         [
             torch.zeros_like(log_no_event[:, :1]),
@@ -462,12 +510,17 @@ def factorized_competing_risk_distribution(
         ],
         dim=1,
     )
+    # pi_{t,k} = P(cause k | event in bin t); normalised over K only.
     cause_probabilities = torch.softmax(cause_logits, dim=-1)
+    # m_{t,k} = S_{t-1} * q_t * pi_{t,k}: mass of "first event is cause k at t".
     incidence_mass = torch.exp(log_survival_before + log_event).unsqueeze(-1)
     incidence_mass = incidence_mass * cause_probabilities
+    # S_t = prod_{s<=t} (1 - q_s) and its running cause-specific incidence.
     log_survival = torch.cumsum(log_no_event, dim=1)
     survival = torch.exp(log_survival)
     cumulative_incidence = torch.cumsum(incidence_mass, dim=1)
+    # risk = 1 - S_H computed as -expm1(log S_H) so that very small risks
+    # (an untrained model starts near base_event_rate) keep full precision.
     horizon_log_survival = log_survival[:, -1]
     risk = -torch.expm1(horizon_log_survival)
     return {
@@ -520,14 +573,26 @@ class AgentNewModel(nn.Module):
         node_batch: torch.Tensor,
         candidate_node_indices: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
+        # Step 5 -- TemporalGraphFusion: attention-pool the graph with the
+        # temporal state as query, then concatenate [temporal, pooled,
+        # candidate-action node] into one fused vector per sample.
         fused_state = self.fusion(
             temporal_state, nodes, node_batch, candidate_node_indices
         )
+        # Interpretable concept probabilities (goal_deviation,
+        # untrusted_provenance, privilege_excess, ...).  They are supervised
+        # by concept_supervision_loss and feed the risk head below.
         concept_logits = self.concept_head(fused_state)
         concept_probabilities = torch.sigmoid(concept_logits)
+        # Step 6 -- MonotoneFactorizedCompetingRiskHead:
+        #   event_logits [B, H]    -> q_t, any harmful first event in bin t
+        #   cause_logits [B, H, K] -> which event type, given an event
         event_logits, cause_logits = self.risk_head(
             fused_state, concept_probabilities
         )
+        # Step 7 -- factorized_competing_risk_distribution turns the logits
+        # into survival S_t, incidence mass m_{t,k}, horizon risk 1 - S_H and
+        # cause-specific risk.  This is the quantity the runtime bounds.
         prediction = factorized_competing_risk_distribution(
             event_logits, cause_logits
         )
@@ -547,6 +612,15 @@ class AgentNewModel(nn.Module):
     def _forward_branch(
         self, branch: Mapping[str, torch.Tensor]
     ) -> Dict[str, Any]:
+        """Run the full pipeline for one intervention branch.
+
+        The numbered steps match the "Reading guide" in the module docstring
+        and the "Core algorithm" section of the README.
+        """
+
+        # Step 1 -- temporal prefix state.  StepTimeSafetyEncoder scans the
+        # observed history (plus the candidate action) in order, applying
+        # wall-clock decay between events; output is one vector per sample.
         temporal_state = self.temporal_encoder(
             branch["event_features"],
             branch["wall_deltas"],
@@ -557,9 +631,15 @@ class AgentNewModel(nn.Module):
         edge_index = branch["edge_index"].long()
         edge_types = branch["edge_types"].long()
         edge_batch = branch["edge_batch"].long()
+        # Step 2 -- initial node embeddings and per-edge context for the
+        # persistent provenance/permission graph built by graph.py.
         initial_nodes, edge_context = self.graph_encoder.prepare(
             branch["node_features"], edge_types, branch["edge_state"]
         )
+        # Step 3 -- evidence scoring.  EvidenceMasker sees (source, target,
+        # temporal state, edge context) and emits one logit per edge.  The
+        # sigmoid of that logit is the edge's weight in message passing, so
+        # the explanation *is* the computation, not a post-hoc attribution.
         evidence_logits = self.evidence_masker(
             initial_nodes,
             edge_index,
@@ -570,6 +650,11 @@ class AgentNewModel(nn.Module):
         evidence_weights = torch.sigmoid(
             evidence_logits / self.config.evidence_temperature
         )
+        # Step 4 -- three deterministic GNN passes over the same graph:
+        #   full       : all edges weight 1          (reference)
+        #   selected   : weight = evidence           (reported risk path)
+        #   complement : weight = 1 - evidence       (necessity check)
+        # Sharing parameters and using no dropout keeps the three comparable.
         full_nodes = self.graph_encoder.propagate(
             initial_nodes, edge_index, edge_types, edge_context
         )
@@ -589,6 +674,9 @@ class AgentNewModel(nn.Module):
         )
         node_batch = branch["node_batch"].long()
         candidate_indices = branch["candidate_node_indices"].long()
+        # Steps 5-7 -- fusion, concept heads, competing-risk head and the
+        # survival/incidence distribution, once per subgraph.  See
+        # _prediction_from_nodes.
         full = self._prediction_from_nodes(
             temporal_state, full_nodes, node_batch, candidate_indices
         )
@@ -600,6 +688,8 @@ class AgentNewModel(nn.Module):
         )
         # Frequently consumed fields are exposed directly; complete
         # distributions remain available in the three named prediction paths.
+        # ``risk`` (what the runtime and the policy consume) is always the
+        # *selected*-path horizon risk, 1 - S_H.
         return {
             "temporal_state": temporal_state,
             "evidence_logits": evidence_logits,
@@ -631,10 +721,17 @@ class AgentNewModel(nn.Module):
         branches = batch.get("branches")
         if not isinstance(branches, Mapping) or not branches:
             raise ValueError("batch['branches'] must be a non-empty mapping")
+        # Branches are evaluated in the fixed INTERVENTIONS order
+        # (none, verified_approval, redact_sensitive, constrain_destination,
+        # sandbox, restrict_capability) so column i of risk_matrix always
+        # refers to the same intervention.
         branch_names = self._ordered_branch_names(branches)
         branch_outputs = {
             name: self._forward_branch(branches[name]) for name in branch_names
         }
+        # The "actual" branch is the candidate as the agent proposed it
+        # (``none``).  Every other branch is a counterfactual: the same
+        # request after one intervention was applied in data.py.
         if self.config.actual_branch in branch_outputs:
             actual_name = self.config.actual_branch
         elif "actual" in branch_outputs:
@@ -642,6 +739,11 @@ class AgentNewModel(nn.Module):
         else:
             actual_name = branch_names[0]
         actual = branch_outputs[actual_name]
+        # risk_matrix[b, i] = P(harmful first event within H | branch i).
+        # risk_deltas[b, i] = risk(actual) - risk(branch i); positive means
+        # the intervention is predicted to reduce risk.  Because all branches
+        # share parameters and contain no dropout, the difference reflects
+        # the intervention alone.
         risk_matrix = torch.stack(
             [branch_outputs[name]["risk"] for name in branch_names], dim=1
         )
