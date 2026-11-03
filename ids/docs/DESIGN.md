@@ -41,7 +41,8 @@ The sensor itself is assumed uncompromised.
 ## Roadmap
 
 - [x] Scaffold: capture, flows, signature + anomaly detectors, alert manager
-- [ ] CIC-IDS2017 loader and evaluation harness (precision / recall per attack)
+- [x] CIC-IDS2017 loader and evaluation harness (precision / recall per attack)
+- [ ] Run harness on real CIC-IDS2017 data; first results table
 - [ ] Isolation Forest detector behind the same interface
 - [ ] Payload-pattern rules (byte signatures)
 - [ ] Live capture via scapy / pyshark

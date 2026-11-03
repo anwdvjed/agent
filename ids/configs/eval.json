@@ -1,0 +1,11 @@
+{
+  "rules": "rules/default.yaml",
+  "theta_sweep": [2, 3, 4, 5, 6],
+  "datasets": {
+    "cicids2017": {
+      "train": ["data/cicids2017/Monday-WorkingHours.pcap_ISCX.csv"],
+      "test": ["data/cicids2017/Tuesday-*.csv", "data/cicids2017/Wednesday-*.csv",
+               "data/cicids2017/Thursday-*.csv", "data/cicids2017/Friday-*.csv"]
+    }
+  }
+}

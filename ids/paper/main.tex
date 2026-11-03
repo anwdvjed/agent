@@ -1,0 +1,85 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{cite,amsmath,amssymb,graphicx,booktabs,url,hyperref,xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\begin{document}
+
+\title{Explainable Hybrid Intrusion Detection:\\Combining Declarative Signatures with Per-Feature Anomaly Attribution}
+
+\author{\IEEEauthorblockN{\todo{Author}}
+\IEEEauthorblockA{School of Electronics and Computer Science\\University of Southampton\\\todo{email}}}
+
+\maketitle
+
+\begin{abstract}
+\todo{150--200 words. Problem: anomaly-based NIDS reach high recall but produce alerts analysts cannot act on; signature systems are precise but miss novel attacks. Approach: a hybrid pipeline whose anomaly path reports which flow feature triggered the alert, fused with declarative rules through a shared alert manager. Evaluation: CIC-IDS2017 and UNSW-NB15, per-attack precision/recall, false-positive rate at matched recall, alert-volume reduction from de-duplication. Headline result: \todo{numbers}.}
+\end{abstract}
+
+\begin{IEEEkeywords}
+intrusion detection, anomaly detection, network security, explainability, flow features
+\end{IEEEkeywords}
+
+\section{Introduction}
+\todo{Motivation: alert fatigue; the precision/recall gap between signature and anomaly NIDS \cite{sommer2010outside}. State the research question (see \texttt{docs/RESEARCH\_PLAN.md}). List contributions as 3--4 bullets.}
+
+\section{Background and Related Work}
+\subsection{Signature-based detection}
+\todo{Snort \cite{roesch1999snort}, Suricata; strengths and the novel-attack blind spot.}
+\subsection{Anomaly-based detection}
+\todo{Statistical baselines, Isolation Forest \cite{liu2008isolation}, deep models; the operational-deployment critique \cite{sommer2010outside}.}
+\subsection{Hybrid and explainable NIDS}
+\todo{Prior hybrids; explainability for IDS \cite{arp2022dos}; where this work sits.}
+\subsection{Benchmark datasets}
+\todo{CIC-IDS2017 \cite{sharafaldin2018toward}, UNSW-NB15 \cite{moustafa2015unsw}, NSL-KDD; known labelling issues \cite{engelen2021troubleshooting}.}
+
+\section{Threat Model and Design Goals}
+\todo{Passive sensor on one link; external attacker; sensor uncompromised. Goals G1--G4 from DESIGN.md.}
+
+\section{System Design}
+\subsection{Flow assembly and features}
+\todo{5-tuple bidirectional flows, idle timeout $\tau$, feature vector $\mathbf{x} \in \mathbb{R}^6$ (Table~\ref{tab:features}).}
+\begin{table}[t]
+\centering\caption{Per-flow features.}\label{tab:features}
+\begin{tabular}{ll}\toprule
+Feature & Definition \\\midrule
+duration & $t_{\text{last}} - t_{\text{first}}$ \\
+packets & packet count \\
+bytes & total bytes \\
+mean\_len & bytes / packets \\
+syn\_ratio & SYN-only packets / packets \\
+pkts\_per\_sec & packets / duration \\\bottomrule
+\end{tabular}
+\end{table}
+\subsection{Signature path}
+\todo{Declarative rule language; matching semantics.}
+\subsection{Anomaly path with feature attribution}
+Each flow is scored by $z_j = |(\log(1+x_j) - \mu_j)/\sigma_j|$ and an alert is raised when $\max_j z_j \ge \theta$, reporting the arg-max feature $j^\star$ as the explanation. \todo{Justify log transform; contrast with Isolation Forest, which gives a score but no attribution.}
+\subsection{Alert fusion and de-duplication}
+\todo{Dedupe key, window $w$, severity ordering.}
+
+\section{Experimental Setup}
+\todo{Datasets and splits; attack classes; baselines (signature-only, anomaly-only, Isolation Forest); metrics (precision, recall, F1, FPR, alerts per true incident); hyperparameters $\tau,\theta,w$; hardware.}
+
+\section{Results}
+\input{tables/results_main.tex}
+\todo{Per-attack table; precision--recall curves over $\theta$ (Fig.~\ref{fig:pr}); alert-volume reduction; ablation of the log transform; attribution agreement with ground truth attack type.}
+\begin{figure}[t]\centering
+\todo{\includegraphics[width=\linewidth]{figures/pr_curve.pdf}}
+\caption{Precision--recall over anomaly threshold $\theta$.}\label{fig:pr}
+\end{figure}
+
+\section{Discussion}
+\todo{Why attribution matters operationally; where the hybrid fails (low-rate attacks, encrypted payloads); dataset artefacts.}
+
+\section{Threats to Validity}
+\todo{Internal: label noise in CIC-IDS2017; feature set small. External: single-link, offline evaluation; synthetic traffic in unit tests only. Construct: FPR per flow vs per incident.}
+
+\section{Conclusion and Future Work}
+\todo{Summarise; live capture, per-service baselines, learned rule mining.}
+
+\section*{Reproducibility}
+Code, rules, configs and the evaluation harness are in the \texttt{ids/} directory of the project repository. \texttt{python -m ids.evaluation.run} regenerates every table in this paper from the dataset CSVs.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}

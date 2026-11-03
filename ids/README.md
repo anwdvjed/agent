@@ -69,4 +69,19 @@ ids run --source synthetic --config configs/default.json
 - UNSW-NB15
 - NSL-KDD (legacy, small, useful for quick experiments)
 
+## Toward a paper
+
+- `docs/RESEARCH_PLAN.md`: research question, hypotheses, candidate
+  contributions, baselines, metrics, protocol and a 12-week timeline.
+- `ids/evaluation/`: dataset loader (CIC-IDS2017 CSVs), flow-level and
+  attribution metrics, and a runner that writes `results/*.csv` and
+  `paper/tables/*.tex`.
+- `paper/`: IEEE-format LaTeX skeleton with section-by-section TODOs and a
+  starter bibliography. Build with `make -C paper`.
+
+```bash
+python -m ids.evaluation.run --dataset cicids2017 --config configs/eval.json
+make -C paper
+```
+
 See `docs/DESIGN.md` for goals, threat model and open decisions.
