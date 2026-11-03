@@ -8,30 +8,208 @@ This repository contains an untrained model implementation and engineering
 smoke tests. It intentionally contains no pretrained safety checkpoint and
 makes no benchmark-performance claim.
 
+## What problem this solves
+
+An LLM agent proposes a tool call (for example `send_email(to=..., body=...)`).
+Before the call runs, Agent New answers three questions:
+
+1. **Is this action allowed at all?** Checked against a trusted tool registry
+   and the permission receipt. This layer is deterministic and fails closed.
+2. **If it runs, what is the probability that a harmful first event
+   (privacy leakage, data loss, unauthorized external action, ...) occurs
+   within the next `H` steps, and when?** Answered by a learned,
+   right-censored competing-risk model over the agent's provenance graph.
+3. **Would a cheaper fix than blocking make it safe?** The same model is
+   re-run under five counterfactual interventions (require approval, redact
+   sensitive arguments, pin the destination, sandbox, restrict capability),
+   and a cost-aware policy picks `ALLOW`, `CONFIRM`, `REPLAN`, `HOLD` or
+   `BLOCK`.
+
+Most published guardrails answer only question 1, or label a single action as
+safe/unsafe. See [reports/related_work.md](reports/related_work.md) for a
+comparison with DreamGuard, ProbGuard, ToolSafe, ShieldAgent, LlamaFirewall
+and agent-IDS work.
+
 ## Architecture
+
+Each stage below names the function that implements it and the file it lives
+in.
 
 ```text
 trusted goal + policy + observed prefix + unexecuted candidate action
                                   |
-                   trusted tool capability registry
+   (1) validate + registry lookup        prepare_request()        data.py
+       unknown tool -> fail-closed       ToolRegistry.resolve_or_fail_closed()
+                                                                   registry.py
                                   |
-              persistent provenance / permission graph
+   (2) persistent provenance graph       build_persistent_graph() graph.py
+       actor/source/data/action/
+       destination/permission/policy
                                   |
-       +---------------- intervention branches ----------------+
-       | none | approval | redact | constrain | sandbox | deny |
-       +--------------------------------------------------------+
+   (3) six intervention branches         _apply_candidate_intervention()
+       none | verified_approval |                                  data.py
+       redact_sensitive | constrain_destination |
+       sandbox | restrict_capability
                                   |
-          step/time encoder + deterministic relational GNN
+   (4) step/time encoder                 StepTimeSafetyEncoder    model.py
+       relation-aware GNN                DeterministicRelationGraphEncoder
+       differentiable evidence mask      EvidenceMasker
+       (selected / full / complement)    AgentNewModel._forward_branch
                                   |
-           differentiable evidence mask used by prediction
+   (5) factorized competing-risk head    MonotoneFactorizedCompetingRiskHead
+       P(event at t) x P(cause | event)  factorized_competing_risk_distribution
                                   |
-            factorized first-event competing-risk head
-                 P(event at t) x P(cause | event)
+   (6) censored likelihood (training)    factorized_competing_risk_losses
+                                                                   losses.py
                                   |
-             group-calibrated risk upper bounds / ensemble
+   (7) ensemble mean + z.std, then       SafetyRuntime.assess()   runtime.py
+       group-conformal upper bound       GroupConformalCalibration.risk_upper_bound
+                                                                   calibration.py
                                   |
-           ALLOW / HOLD / REPLAN / CONFIRM / BLOCK
+   (8) least-cost safe intervention      InterventionPolicy.select policy.py
+       ALLOW / HOLD / REPLAN / CONFIRM / BLOCK
 ```
+
+## Core algorithm
+
+This section states what the code actually computes. Symbols: batch `B`,
+horizon bins `H` (`config.horizon`, default 5), event types `K`
+(`DEFAULT_EVENT_TYPES`, 5), intervention branches `I` (`INTERVENTIONS`, 6).
+
+### Stage 5: factorized first-event competing risk
+
+Implemented in `MonotoneFactorizedCompetingRiskHead.forward` and
+`factorized_competing_risk_distribution` ([agent_new/model.py](agent_new/model.py)).
+
+For each horizon bin `t = 1..H` the head emits one *any-event* logit `a_t` and
+`K` *cause* logits `c_{t,k}`:
+
+```text
+q_t        = sigmoid(a_t)                       P(first event in bin t | none before t)
+pi_{t,k}   = softmax_k(c_{t,k})                 P(cause = k | event in bin t)
+S_t        = prod_{s<=t} (1 - q_s)              survival through bin t
+m_{t,k}    = S_{t-1} * q_t * pi_{t,k}           incidence mass of cause k at t
+risk       = 1 - S_H                            P(any harmful event within H)
+cause_risk = sum_t m_{t,k}                      P(first event has cause k)
+```
+
+Everything is computed in log space (`logsigmoid`, `cumsum`, `expm1`), so
+extreme logits do not overflow. The any-event bias is initialised to
+`logit(base_event_rate)` (default 0.01), so an untrained model starts at a
+low, not saturated, risk. A monotonicity constraint (`softplus` weights on
+the six *critical* concepts such as `privilege_excess` or
+`sensitive_data_flow`) guarantees that raising a critical concept probability
+can never lower `q_t`.
+
+### Stage 6: right-censored likelihood
+
+Implemented in `factorized_competing_risk_losses`
+([agent_new/losses.py](agent_new/losses.py)).
+
+```text
+observed event of cause k at bin t:
+    NLL = sum_{s<t} softplus(a_s) + softplus(-a_t) - log_softmax_k(c_{t,k})
+right-censored after c observed safe bins:
+    NLL = sum_{s<=c} softplus(a_s)
+```
+
+`softplus(a)` is `-log(1 - sigmoid(a))`, so no probability is ever clamped and
+gradients never vanish on confident predictions. Safe trajectories therefore
+contribute real supervision (they survived), not a fake "no-event" class.
+
+### Stage 3 + 4: intervention-conditioned forecasting
+
+`prepare_request` builds `I` copies of the request. Branch `none` is the
+candidate as proposed; each other branch is the candidate after one
+intervention has been applied by `_apply_candidate_intervention`
+([agent_new/data.py](agent_new/data.py)). All branches go through the *same*
+encoder parameters, with no dropout, so
+
+```text
+risk_delta[b, i] = risk[b, none] - risk[b, i]
+```
+
+(`AgentNewModel.forward`) is a paired comparison that measures only the
+effect of the intervention, not sampling noise. A branch whose intervention
+changed nothing (for example "sandbox" on a non-`execute` tool) is marked
+`intervention_effective = False` and is ignored by the runtime.
+
+### Stage 4: evidence as part of the forward pass
+
+`EvidenceMasker` scores every provenance edge from `(source node, target
+node, temporal state, edge context)`. The sigmoid of that score is used as the
+edge weight in message passing. The model runs the GNN three times per branch
+(`AgentNewModel._forward_branch`):
+
+| path | edge weights | used for |
+|---|---|---|
+| `selected` | `w_e = sigmoid(score_e / T)` | the reported risk and the `evidence_edges` in the runtime output |
+| `full` | `1` | sufficiency: selected risk should match full risk |
+| `complement` | `1 - w_e` | necessity: complement risk should drop |
+
+Sufficiency, necessity and sparsity terms live in
+`evidence_regularization_losses` ([agent_new/losses.py](agent_new/losses.py)).
+
+### Stage 7: ensemble dispersion and conformal upper bound
+
+`SafetyRuntime.assess` ([agent_new/runtime.py](agent_new/runtime.py)) runs
+every checkpoint in the ensemble and, per branch, computes
+
+```text
+mean, std   over checkpoints
+point_upper = min(1, mean + z * std)                     z = ensemble_z (1.96)
+upper       = min(1, point_upper + correction)           GroupConformalCalibration
+```
+
+`correction` is a one-sided finite-sample conformal quantile fitted by
+`fit_group_conformal` ([agent_new/calibration.py](agent_new/calibration.py))
+on **trajectory groups**, not individual prefixes, so repeated prefixes of the
+same episode do not inflate the calibration set. Checkpoints must carry
+distinct `training_run_id` and `seed`; otherwise `std` is not a valid
+dispersion estimate and the runtime refuses to `ALLOW`.
+
+### Stage 8: decision rule
+
+`InterventionPolicy.select` ([agent_new/policy.py](agent_new/policy.py)).
+A branch is *reliably safe* when
+
+```text
+upper <= safe_risk_limit (0.20)  and  mean <= safe_risk_limit
+and  std <= epistemic_uncertainty_limit (0.25)
+```
+
+| situation | decision |
+|---|---|
+| every branch fails a hard registry/permission prerequisite | `BLOCK` |
+| trusted-context signature missing or invalid | `HOLD` |
+| fewer than two independent checkpoints, or no calibration | `HOLD` |
+| `none` is reliably safe | `ALLOW` + opaque commit digest |
+| cheapest reliably safe repair is `verified_approval` | `CONFIRM` |
+| cheapest reliably safe repair is `restrict_capability` | `BLOCK` |
+| any other reliably safe repair | `REPLAN` |
+| no safe branch, and uncertainty is the cause | `HOLD` |
+| no safe branch, confident | `BLOCK` |
+
+Intervention costs are fixed in `INTERVENTION_COSTS`
+([agent_new/constants.py](agent_new/constants.py)):
+`none 0 < verified_approval 1 < redact/constrain 1.5 < sandbox 2 < restrict 4`.
+
+### Core functions at a glance
+
+| Function | File | One-line role |
+|---|---|---|
+| `prepare_request(request, registry)` | `agent_new/data.py` | validate input, resolve tools, build one `PreparedBranch` per intervention |
+| `collate_prepared(examples)` | `agent_new/data.py` | pad/concatenate branches into tensors |
+| `build_persistent_graph(...)` | `agent_new/graph.py` | heterogeneous provenance graph with stable node identities |
+| `AgentNewModel.forward(batch)` | `agent_new/model.py` | run every branch, return `risk_matrix [B, I]` and `risk_deltas` |
+| `factorized_competing_risk_distribution(a, c)` | `agent_new/model.py` | logits -> survival, incidence, `risk`, `cause_risk` |
+| `factorized_competing_risk_losses(...)` | `agent_new/losses.py` | right-censored first-event NLL |
+| `agent_new_loss(outputs, batch)` | `agent_new/losses.py` | total loss: hazard + intervention + concept + evidence + intent/utility |
+| `fit_group_conformal(...)` | `agent_new/calibration.py` | one-sided conformal correction on trajectory groups |
+| `select_threshold_at_safe_trajectory_fpr(...)` | `agent_new/calibration.py` | operating threshold at a target safe-trajectory FPR |
+| `SafetyRuntime.assess(request)` | `agent_new/runtime.py` | hard checks -> ensemble forecast -> upper bounds -> decision |
+| `InterventionPolicy.select(...)` | `agent_new/policy.py` | least-cost reliably safe intervention |
+| `sign_request` / `HMACRequestVerifier` | `agent_new/trust.py` | prove the goal/policy/receipt came from a trusted issuer |
 
 ## Improvements over the previous local prototype
 
@@ -182,6 +360,20 @@ outputs = model(batch)
 print(outputs["risk_matrix"].shape)  # [batch, intervention branches]
 ```
 
+The most useful keys in `outputs` are:
+
+| key | shape | meaning |
+|---|---|---|
+| `branch_names` | `(I,)` | column order of every `[B, I]` tensor, always `INTERVENTIONS` order |
+| `actual_risk` | `[B]` | `risk` of the `none` branch: `P(harmful first event within H)` |
+| `risk_matrix` | `[B, I]` | the same risk under each intervention |
+| `risk_deltas` | `[B, I]` | `actual_risk - risk_matrix`; positive = intervention helps |
+| `branches[name]["selected"]["cause_risk"]` | `[B, K]` | probability the first event is of each type |
+| `branches[name]["selected"]["incidence_mass"]` | `[B, H, K]` | when and why the first event is expected |
+| `branches[name]["concept_probabilities"]` | `[B, 9]` | interpretable concepts (`CONCEPTS` order) |
+| `branches[name]["evidence_weights"]` | `[E]` | per-edge evidence score used in message passing |
+| `branches[name]["attack_intent_logit"]`, `["utility_logit"]` | `[B]` | auxiliary heads |
+
 Training labels use:
 
 - `event_time`: one-based first-event action bin;
@@ -329,6 +521,29 @@ trajectory groups; undersized calibration sets fail closed.
 The test script refuses to fall back to validation data. It evaluates only
 manifest splits beginning with `test_` and prints `Test Epoch 001/001` for each
 frozen dataset.
+
+## Related work and positioning
+
+[reports/related_work.md](reports/related_work.md) compares this design with
+recent pre-execution guardrails (DreamGuard, ProbGuard, ToolSafe/TS-Guard,
+AgentDoG, ShieldAgent, LlamaFirewall), agent intrusion-detection work
+(evidence-based A-IDS, MCPShield, SentinelAgent) and the benchmarks they use
+(OSGuard, TS-Bench, ATBench, ShieldAgent-Bench, AgentDojo). In short:
+
+- Most guardrails classify one action or one trajectory as safe or unsafe.
+  Only DreamGuard and ProbGuard forecast *future* risk; neither reports risk
+  separately per candidate intervention.
+- Provenance and permission tracking appears in the IDS line of work but not
+  in learned pre-execution guardrails.
+- Only ProbGuard (PAC-style) and the certified-enforcement theory line give
+  formal or statistical guarantees; this repository targets group-conformal
+  upper bounds at a fixed safe-trajectory false-positive rate.
+- MCPShield reports that random train/test splits inflate AUROC by up to 26
+  points relative to task-disjoint splits. The dataset pipeline here splits
+  by conversation/task group for that reason.
+
+None of these advantages is demonstrated empirically yet; see the next
+section.
 
 ## Required evidence before research claims
 

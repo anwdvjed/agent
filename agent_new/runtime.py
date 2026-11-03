@@ -207,16 +207,37 @@ class SafetyRuntime:
         return outputs, tensor_batch
 
     def assess(self, request: Mapping[str, Any], evidence_top_k: int = 5) -> Dict[str, Any]:
+        """Assess one candidate tool action before it executes.
+
+        Pipeline (numbers match the README "Architecture" diagram):
+
+        * (1)-(3) ``prepare_request`` validates the request against the
+          trusted registry and builds one branch per intervention;
+        * (4)-(5) every checkpoint in the ensemble runs ``AgentNewModel``;
+        * (7) per-branch ensemble mean/std -> ``mean + z*std`` -> conformal
+          upper bound via ``GroupConformalCalibration.risk_upper_bound``;
+        * (8) ``InterventionPolicy`` turns the bounds into a decision.
+
+        Hard prerequisites and attestation are checked before any learned
+        number is allowed to influence the outcome.
+        """
+
         if canonical_digest(self.registry.to_dict()) != self.ensemble.registry_digest:
             raise RuntimeError(
                 "trusted tool registry changed after checkpoint verification; reload the ensemble"
             )
+        # Attestation: did the goal / policy / permission receipt really come
+        # from a trusted issuer?  (trust.HMACRequestVerifier by default.)
         trusted_context_verified = bool(
             self.trusted_context_verifier is not None
             and self.trusted_context_verifier(request)
         )
+        # Stages (1)-(3): validation, registry lookup, provenance graph and
+        # the six intervention branches, all produced by data.prepare_request.
         prepared = prepare_request(request, self.registry)
         batch = collate_prepared([prepared])
+        # Stages (4)-(5): one forward pass per checkpoint, under
+        # torch.inference_mode, each returning risk per branch.
         forecasts, _ = self._forecast(batch)
         branch_names = tuple(forecasts[0]["branch_names"])
         for output in forecasts[1:]:
@@ -228,11 +249,15 @@ class SafetyRuntime:
         upper_bounds: Dict[str, float] = {}
         uncertainties: Dict[str, float] = {}
         hard_status: Dict[str, Dict[str, Any]] = {}
+        # A model-based ALLOW needs (a) a calibration artifact, (b) >= 2
+        # checkpoints and (c) proof they are independent training runs;
+        # otherwise ``std`` is not a usable epistemic-uncertainty estimate.
         calibrated_ensemble = bool(
             self.calibration is not None
             and len(forecasts) >= 2
             and self.ensemble.independent_runs_verified
         )
+        # Stage (7): ensemble dispersion and conformal upper bound per branch.
         for name in branch_names:
             values = torch.tensor(
                 [float(output["branches"][name]["risk"][0].item()) for output in forecasts]
@@ -240,10 +265,15 @@ class SafetyRuntime:
             mean = float(values.mean().item())
             std = float(values.std(unbiased=False).item())
             metadata = batch["metadata"]["branches"][name][0]
+            # fail_closed: a trusted prerequisite (unknown tool, missing
+            # scope, unverified approval, unknown destination, ...) failed.
+            # applicable: the intervention actually changed something; a
+            # no-op repair must not be credited with reducing risk.
             fail_closed = bool(metadata["fail_closed"])
             applicable = bool(
                 name == "none" or metadata.get("intervention_effective", False)
             )
+            # point_upper = mean + z * std  (z = ensemble_z, 1.96 by default)
             point_upper = min(1.0, mean + self.ensemble_z * std)
             # The current calibration artifact is fitted to the actual
             # no-intervention score.  Repair branches remain informational
@@ -265,6 +295,9 @@ class SafetyRuntime:
                 "reasons": list(metadata["fail_reasons"]),
             }
 
+        # Stage (8): decision ladder.  Hard constraints and attestation come
+        # first; the learned policy (InterventionPolicy.select_from_values)
+        # is consulted only in the final branch.
         if all(
             value["fail_closed"] or not value["applicable"]
             for value in hard_status.values()
@@ -315,12 +348,20 @@ class SafetyRuntime:
                 intervention_cost=None,
             )
         else:
+            # Only the ``none`` branch is passed in because the shipped
+            # calibration certifies only that branch.  Once branch-conditional
+            # calibration exists, all applicable branches go here and the
+            # policy picks the least-cost reliably safe repair.
             decision = self.policy.select_from_values(
                 {"none": upper_bounds["none"]},
                 {"none": mean_risks["none"]},
                 {"none": uncertainties["none"]},
             )
 
+        # Diagnostics from the actual branch, averaged over the ensemble:
+        #   cause_risk [K]        -> most likely first-event type
+        #   incidence_mass [H, K] -> expected step of the first event
+        #   evidence_weights [E]  -> top-k provenance edges behind the risk
         actual_outputs = [output["branches"]["none"] for output in forecasts]
         mean_cause_risk = torch.stack(
             [value["selected"]["cause_risk"][0].cpu() for value in actual_outputs]
@@ -330,6 +371,7 @@ class SafetyRuntime:
             [value["selected"]["incidence_mass"][0].cpu() for value in actual_outputs]
         ).mean(dim=0).sum(dim=-1)
         time_values = torch.arange(1, mean_incidence.shape[0] + 1, dtype=mean_incidence.dtype)
+        # E[T | event within H] = sum_t t * m_t / sum_t m_t
         expected_step = float(
             (mean_incidence * time_values).sum().item()
             / max(float(mean_incidence.sum().item()), 1.0e-8)
